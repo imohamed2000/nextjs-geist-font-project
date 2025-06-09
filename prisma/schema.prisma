@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id          String       @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String       @unique
+  dateOfBirth DateTime
+  address     String?
+  phoneNumber String?
+  enrollments Enrollment[]
+  attendance  Attendance[]
+  grades      Grade[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Staff {
+  id          String       @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String       @unique
+  role        String
+  phoneNumber String?
+  courses     Course[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  name        String
+  code        String       @unique
+  description String?
+  credits     Int
+  teacher     Staff        @relation(fields: [teacherId], references: [id])
+  teacherId   String
+  enrollments Enrollment[]
+  grades      Grade[]
+  sessions    TimetableSession[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  String
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, courseId])
+}
+
+model TimetableSession {
+  id        String   @id @default(cuid())
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  String
+  dayOfWeek Int      // 1-7 representing Monday-Sunday
+  startTime DateTime
+  endTime   DateTime
+  room      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  date      DateTime
+  status    String   // present, absent, late
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, date])
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  student   Student  @relation(fields: [studentId], references: [id])
+  studentId String
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  String
+  score     Float
+  type      String   // exam, assignment, quiz
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AccountingRecord {
+  id          String   @id @default(cuid())
+  type        String   // fee, salary, expense
+  amount      Float
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
